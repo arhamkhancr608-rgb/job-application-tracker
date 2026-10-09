@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobTrack | Application Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+    }
+    header {
+      background: #172554;
+      color: white;
+      padding: 24px 8%;
+    }
+    header h1 { margin: 0 0 8px; }
+    main { max-width: 1050px; margin: 30px auto; padding: 0 18px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+    .card, .panel {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px #17255412;
+    }
+    .number { font-size: 30px; font-weight: bold; color: #2563eb; }
+    .panel { margin-top: 24px; }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    input, select, button {
+      width: 100%; padding: 12px; border-radius: 8px;
+      border: 1px solid #d5dbea; font-size: 15px;
+    }
+    button { background: #2563eb; color: white; border: 0; cursor: pointer; }
+    .delete { background: #dc2626; width: auto; padding: 8px 12px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+    th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid #e7eaf1; }
+    th { color: #64748b; }
+    .status { background: #e0eaff; padding: 5px 9px; border-radius: 20px; white-space: nowrap; }
+    @media (max-width: 600px) { header { padding: 22px 18px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>JobTrack 🎯</h1>
+    <p>Organize your job search. Track every opportunity.</p>
+  </header>
+
+  <main>
+    <section class="stats">
+      <div class="card"><p>Total Applications</p><div class="number" id="total">0</div></div>
+      <div class="card"><p>Interviews</p><div class="number" id="interviews">0</div></div>
+      <div class="card"><p>Offers</p><div class="number" id="offers">0</div></div>
+    </section>
+
+```
+<section class="panel">
+  <h2>＋ Add Job Application</h2>
+  <form id="jobForm">
+    <input id="company" placeholder="Company name" required>
+    <input id="role" placeholder="Job title" required>
+    <input id="date" type="date" required>
+    <select id="status">
+      <option>Applied</option>
+      <option>Interview</option>
+      <option>Offer</option>
+      <option>Rejected</option>
+    </select>
+    <button type="submit">Add Application</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Your Applications</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Company</th><th>Role</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="jobs"></tbody>
+    </table>
+  </div>
+  <p id="empty">No applications yet. Add your first one above!</p>
+</section>
+```
+
+  </main>
+
+  <script>
+    let applications = JSON.parse(localStorage.getItem("jobtrack-apps") || "[]");
+    const form = document.getElementById("jobForm");
+
+    function render() {
+      const tbody = document.getElementById("jobs");
+      tbody.replaceChildren();
+
+      applications.forEach((job, index) => {
+        const row = document.createElement("tr");
+        [job.company, job.role, job.date, job.status].forEach(value => {
+          const cell = document.createElement("td");
+          if (value === job.status) {
+            const badge = document.createElement("span");
+            badge.className = "status";
+            badge.textContent = value;
+            cell.appendChild(badge);
+          } else {
+            cell.textContent = value;
+          }
+          row.appendChild(cell);
+        });
+
+        const action = document.createElement("td");
+        const remove = document.createElement("button");
+        remove.className = "delete";
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => {
+          applications.splice(index, 1);
+          save();
+        });
+        action.appendChild(remove);
+        row.appendChild(action);
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("total").textContent = applications.length;
+      document.getElementById("interviews").textContent =
+        applications.filter(j => j.status === "Interview").length;
+      document.getElementById("offers").textContent =
+        applications.filter(j => j.status === "Offer").length;
+      document.getElementById("empty").hidden = applications.length > 0;
+    }
+
+    function save() {
+      localStorage.setItem("jobtrack-apps", JSON.stringify(applications));
+      render();
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      applications.push({
+        company: document.getElementById("company").value.trim(),
+        role: document.getElementById("role").value.trim(),
+        date: document.getElementById("date").value,
+        status: document.getElementById("status").value
+      });
+      save();
+      form.reset();
+    });
+
+    render();
+  </script>
+
+</body>
+</html>
